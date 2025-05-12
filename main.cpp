@@ -15,8 +15,8 @@ int** LoadLevel(const std::string& filename);
 int main() {
 
     int** level0 = LoadLevel("levels/level0.txt");
-    int** level2 = LoadLevel("levels/level1.txt");
-    int** level1 = LoadLevel("levels/level2.txt");
+    int** level1 = LoadLevel("levels/level1.txt");
+    int** level2 = LoadLevel("levels/level2.txt");
 
     if (level0 == nullptr || level1 == nullptr || level2 == nullptr) {
         std::cerr << "Error loading level." << std::endl;

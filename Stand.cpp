@@ -1,14 +1,16 @@
 #include "Stand.h"
 #include "raylib.h"
 #include <iostream>
+#include <cmath>
 
-Stand::Stand(const char* texturePath) {
+Stand::Stand(const char* texturePath) : position({0,0}) {
     texture = LoadTexture(texturePath);
 }
 
-void Stand::Update(Vector2 playerPos) {
+void Stand::Update(Vector2 playerPos, const Sound& summon, const Camera2D& camera) {
 
-    Vector2 desiredPos = { playerPos.x + 40, playerPos.y - 10 };
+    float maxRadius = 100.0f;  
+    Vector2 desiredPos = { playerPos.x + 50, playerPos.y - 10 };
     Vector2 toPlayer = {
         desiredPos.x - position.x,
         desiredPos.y - position.y
@@ -17,7 +19,7 @@ void Stand::Update(Vector2 playerPos) {
     position.x += toPlayer.x * 0.1f;
     position.y += toPlayer.y * 0.1f;
 
-    Vector2 mouse = GetMousePosition();
+    Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
     Vector2 toMouse = {
         mouse.x - position.x,
         mouse.y - position.y
@@ -25,21 +27,32 @@ void Stand::Update(Vector2 playerPos) {
 
     float distToMouse = sqrtf(toMouse.x * toMouse.x + toMouse.y * toMouse.y);
 
-    if (distToMouse > 0.01f) {
-        toMouse.x /= distToMouse;
-        toMouse.y /= distToMouse;
-
+    if (distToMouse < maxRadius) {
+        position.x += toMouse.x * 0.1f;
+        position.y += toMouse.y * 0.1f;
+    }
+    else {
         float maxMove = 5.0f;
-        float moveAmount = fminf(distToMouse, maxMove);
+        if (distToMouse > 0.01f) {
+            toMouse.x /= distToMouse;  
+            toMouse.y /= distToMouse;
 
-        position.x += toMouse.x * moveAmount;
-        position.y += toMouse.y * moveAmount;
+            float moveAmount = fminf(distToMouse, maxMove);
+            position.x += toMouse.x * moveAmount;
+            position.y += toMouse.y * moveAmount;
+        }
+    }
+    facingRight = 1.0f;
+    if (mouse.x < position.x) {
+        facingRight = -1.0f;
     }
 
-    rotation = atan2f(mouse.y - position.y, mouse.x - position.x) * RAD2DEG;
 
     if (IsKeyPressed(KEY_F)) {
         active = !active;  
+        if (active) {
+            PlaySound(summon);
+        }
     }
 
     if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
@@ -51,7 +64,16 @@ void Stand::Update(Vector2 playerPos) {
 }
 
 void Stand::Draw() {
-    DrawTextureEx(texture, {position.x, position.y}, .0f, 0.6f, WHITE);
+    Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+
+    if (facingRight < 0) {
+        source.width = -source.width;
+    }
+
+    Rectangle dest = { position.x, position.y, texture.width * 0.6f, texture.height * 0.6f };
+    Vector2 origin = { 0.0f, 0.0f }; 
+
+    DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
 }
 
 bool Stand::isActive() {

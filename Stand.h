@@ -6,7 +6,7 @@
 class Stand {
 public:
     Stand(const char* texturePath);
-    void Update(Vector2 playerPos);
+    void Update(Vector2 playerPos, const Sound& summon, const Camera2D& camera);
     bool isActive();
     void Draw();
     void Unload();
@@ -15,8 +15,8 @@ private:
     Vector2 position;
     bool active = false;
     bool punching = false;
-    float rotation = 1.0f;
     bool firstUpdate=true;
+    float facingRight = 1.0f;
 };
 
 #endif

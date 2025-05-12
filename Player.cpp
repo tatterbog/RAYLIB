@@ -8,13 +8,13 @@ Player::Player(const char* texturePath, Vector2 startPos, float startScale) :
 bool Player::isTile(int el) {
     return el == 1;
 }
-void Player::Update(int level[][TILE_COLS])
+void Player::Update(int level[][TILE_COLS], int currentLevel)
 {
-    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
+    if ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && (position.x < (TILE_COLS * TILE_SIZE))) {
         facingRight = 1.0f;
         position.x += 5.0f;
     }
-    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
+    if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) && (position.x > 0)) {
         facingRight = -1.0f;
         position.x -= 5.0f;
     }
@@ -44,13 +44,26 @@ void Player::Update(int level[][TILE_COLS])
         velocityY = -6.5f;
         OnGround = false;
     }
-
-    if (position.y > HEIGHT + 2 || position.y < -30) {
-        CloseWindow();
-        exit(0);
+    
+    if ((position.y > HEIGHT + 2) || (position.y < -30) ) {
+        if (currentLevel == 0) {
+            position.x = 0;
+            position.y = 0;
+            deaths++;
+        }
+        else {
+            CloseWindow();
+            exit(0);
+        }
     }
 
-    
+    if (currentLevel == 1) {
+        DrawText("Level 1, Good luck!", GetScreenWidth() / 4, GetScreenHeight() / 4, 20, DARKGREEN);
+    }
+
+    if (deaths > 0 && currentLevel == 0) {
+        DrawText("You can only respawn in the tutorial", GetScreenWidth() / 4 + 100, GetScreenHeight() / 4 , 20, RED);
+    }
 }
 
 void Player::Draw()
@@ -67,6 +80,13 @@ Vector2 Player::getPosition() {
     return position;
 }
 
+void Player::setPosition(const Vector2& vec) {
+    position.x = vec.x;
+    position.y = vec.y;
+}
+void Player::setGravity(float f) {
+    gravity = f;
+}
 float Player::getGravity() {
     return gravity;
 }

@@ -117,10 +117,10 @@ int** LoadLevel(const std::string& filename) {
         return nullptr;
     }
     
-    for (int i = 0; i < TILE_ROWS; ++i) {
+    for (int i = 0; i < TILE_ROWS; i++) {
         level[i] = new int[TILE_COLS];
 
-        for (int j = 0; j < TILE_COLS; ++j) {
+        for (int j = 0; j < TILE_COLS; j++) {
             file >> level[i][j];  // reading the values
         }
     }

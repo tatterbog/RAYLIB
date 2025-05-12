@@ -59,13 +59,13 @@ int (*Level::getTiles())[TILE_COLS] {
 }
 
 void Level::DrawTutorial(int levelIndex) {
-    if (levelIndex != 0) { return; } // Only show in level 0
+    if (levelIndex != 0) { return; }
     DrawText("Welcome to the tutorial!", 10, 200, 20, DARKGRAY);
 
-    Vector2 movePos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2};  // Centered for move tutorial
-    Vector2 jumpPos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 40 };        // Below for jump tutorial
-    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + 20 };  // Below jump tutorial
-    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + 20 };      // At the bottom for proceed tutorial
+    Vector2 movePos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2}; 
+    Vector2 jumpPos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 40 };    
+    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + 20 };  
+    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + 20 };     
 
     DrawText("Press [A]/[D] to move (the arrow keys work too)", movePos.x, movePos.y, 20, BLACK);
     DrawText("Press [SPACE] to jump", jumpPos.x, jumpPos.y, 20, BLACK);

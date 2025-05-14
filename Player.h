@@ -24,11 +24,13 @@ private:
     int deaths = 0;
 
 public:
+    
     Player(const char* texturePath = "", Vector2 startPos = {0, 0}, float startScale = 1.1f);
 
     void Update(int level[][TILE_COLS], int currentLevel);
     void Draw();
     void Unload();
+    int getDeathCount();
     void setPosition(const Vector2& vec);
     float getGravity();
     void setGravity(float f);

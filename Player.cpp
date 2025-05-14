@@ -8,6 +8,7 @@ Player::Player(const char* texturePath, Vector2 startPos, float startScale) :
 bool Player::isTile(int el) {
     return el == 1;
 }
+
 void Player::Update(int level[][TILE_COLS], int currentLevel)
 {
     if ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && (position.x < (TILE_COLS * TILE_SIZE))) {
@@ -57,13 +58,6 @@ void Player::Update(int level[][TILE_COLS], int currentLevel)
         }
     }
 
-    if (currentLevel == 1) {
-        DrawText("Level 1, Good luck!", GetScreenWidth() / 4, GetScreenHeight() / 4, 20, DARKGREEN);
-    }
-
-    if (deaths > 0 && currentLevel == 0) {
-        DrawText("You can only respawn in the tutorial", GetScreenWidth() / 4 + 100, GetScreenHeight() / 4 , 20, RED);
-    }
 }
 
 void Player::Draw()
@@ -76,6 +70,7 @@ void Player::Draw()
     DrawTexturePro(texture, source, dest, {0,0}, 0.0f, WHITE);
     DrawEllipse(position.x + (texture.width * scale) / 2 + 1, position.y + texture.height * scale, 15, 8, Fade(BLACK, 0.3f));
 }
+
 Vector2 Player::getPosition() {
     return position;
 }
@@ -84,9 +79,16 @@ void Player::setPosition(const Vector2& vec) {
     position.x = vec.x;
     position.y = vec.y;
 }
+
+int Player::getDeathCount() {
+    return deaths;
+}
+
+
 void Player::setGravity(float f) {
     gravity = f;
 }
+
 float Player::getGravity() {
     return gravity;
 }

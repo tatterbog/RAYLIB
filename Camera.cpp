@@ -12,7 +12,12 @@ CameraControl::CameraControl(Vector2 startTarget, Vector2 offset, float zoom)
 void CameraControl::Update(Vector2 targetPos) {
     float cameraHalfWidth = (GetScreenWidth() / 2.0f) / camera.zoom;
     float cameraHalfHeight = (GetScreenHeight() / 2.0f) / camera.zoom;
-
+    if (IsKeyDown(KEY_W)) {
+        camera.offset.y -= 10.0f; // move camera up
+    }
+    if (IsKeyDown(KEY_S)) {
+        camera.offset.y += 10.0f; // move camera down
+    }
     camera.target.x = fminf(fmaxf(targetPos.x, cameraHalfWidth), worldSize.x - cameraHalfWidth);
     camera.target.y = fminf(fmaxf(targetPos.y, cameraHalfHeight), worldSize.y - cameraHalfHeight);
 }

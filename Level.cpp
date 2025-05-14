@@ -1,8 +1,8 @@
 #include "Level.h"
 #include <iostream>
 
-Level::Level(int **layout, Texture2D dirt, Texture2D grass, Texture2D end, const Music& song)
-    : dirtTex(dirt),  grassTex(grass), endTex(end), music(song) {
+Level::Level(int **layout, Texture2D dirt, Texture2D grass, Texture2D end, Texture2D bckg, const Music& song)
+    : dirtTex(dirt),  grassTex(grass), endTex(end), backgroundTex(bckg), music(song) {
     for (int i = 0; i < TILE_ROWS; i++) {
         for (int j = 0; j < TILE_COLS; j++) {
             tiles[i][j] = layout[i][j];
@@ -12,18 +12,30 @@ Level::Level(int **layout, Texture2D dirt, Texture2D grass, Texture2D end, const
 }
 
 int Level::Draw(Character* player, int currentLevel, int totalLevels) {
-    if (!musicPlaying) {
-        PlayMusicStream(music);
-        musicPlaying = true;
+    if (IsKeyPressed(KEY_M)) {
+        musicPlaying = !musicPlaying;
+
+        if (musicPlaying) {
+            PlayMusicStream(music);
+        }
+        else {
+            PauseMusicStream(music);  // or StopMusicStream(music);
+        }
     }
 
-    UpdateMusicStream(music); 
+    if (musicPlaying && !IsMusicStreamPlaying(music)) {
+        UpdateMusicStream(music);
+    }
 
     Vector2 playerPos = player->getPosition();
     Rectangle playerRect = { playerPos.x, playerPos.y, TILE_SIZE, TILE_SIZE };
+    DrawTexturePro( backgroundTex, 
+        { 0, 0, (float)backgroundTex.width, (float)backgroundTex.height },
+        { 0, 0, (float)(TILE_COLS * TILE_SIZE), (float)HEIGHT }, { 0, 0 }, 0.0f, WHITE);
 
     for (int i = 0; i < TILE_ROWS; i++) {
         for (int j = 0; j < TILE_COLS; j++) {
+            
             int tile = tiles[i][j];
             int x = j * TILE_SIZE;
             int y = i * TILE_SIZE;
@@ -46,7 +58,7 @@ int Level::Draw(Character* player, int currentLevel, int totalLevels) {
                 DrawTexture(grassTex, x, y, WHITE);
                 break;
             default:
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, SKYBLUE);
+                // DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, SKYBLUE);
                 break;
             }
         }
@@ -58,15 +70,18 @@ int (*Level::getTiles())[TILE_COLS] {
     return tiles;
 }
 
-void Level::DrawTutorial(int levelIndex) {
-    if (levelIndex != 0) { return; }
+void Level::DrawTutorial(Character* player, int levelIndex) {
+    if (levelIndex != 0) { return; } // Only show in level 0
     DrawText("Welcome to the tutorial!", 10, 200, 20, DARKGRAY);
 
-    Vector2 movePos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2}; 
-    Vector2 jumpPos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 40 };    
-    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + 20 };  
-    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + 20 };     
+    Vector2 movePos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2};  // Centered for move tutorial
+    Vector2 jumpPos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 40 };        // Below for jump tutorial
+    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + 20 };  // Below jump tutorial
+    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + 20 };      // At the bottom for proceed tutorial
 
+    if (player->getDeathCount() > 0 && levelIndex == 0) {
+        DrawText("You can only respawn in the tutorial", GetScreenWidth() / 4 + 100, GetScreenHeight() / 4, 20, RED);
+    }
     DrawText("Press [A]/[D] to move (the arrow keys work too)", movePos.x, movePos.y, 20, BLACK);
     DrawText("Press [SPACE] to jump", jumpPos.x, jumpPos.y, 20, BLACK);
     DrawText("Press [F] to summon Stand", summonPos.x, summonPos.y, 20, BLACK);

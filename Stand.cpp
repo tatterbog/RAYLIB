@@ -3,7 +3,8 @@
 #include <iostream>
 #include <cmath>
 
-Stand::Stand(const char* texturePath) : position({0,0}) {
+Stand::Stand(const char* texturePath)
+    : position({0,0}), projectiles(new Projectile[MAX_PROJECTILES]), projectileCount(0) {
     texture = LoadTexture(texturePath);
 }
 
@@ -61,25 +62,84 @@ void Stand::Update(Vector2 playerPos, const Sound& summon, const Camera2D& camer
     if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON)) {
         active = false;
     }
+
+    if (active) {
+        if (IsKeyPressed(KEY_C)) {
+            Shoot(toMouse);
+        }
+
+        int activeCount = 0;
+        for (int i = 0; i < projectileCount; i++) {
+            projectiles[i].Update();
+            if (projectiles[i].IsActive()) {
+                if (i != activeCount) {
+                    projectiles[activeCount] = projectiles[i];
+                }
+                activeCount++;
+            }
+        }
+        projectileCount = activeCount;
+    }
+
 }
+
+void Stand::Shoot(Vector2 direction) {
+    float len = sqrtf(direction.x * direction.x + direction.y * direction.y);
+    if (len == 0) { return; }
+
+    Projectile* prr = new Projectile[projectileCount + 1];
+    for (int i = 0; i < projectileCount; i++) {
+        prr[i] = projectiles[i];
+    }
+
+    Vector2 dirNorm = { direction.x / len, direction.y / len };
+    prr[projectileCount].Spawn(position, dirNorm);
+
+    delete[] projectiles;
+    projectiles = prr;
+    projectileCount++;
+}
+
 
 void Stand::Draw() {
     Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
-
     if (facingRight < 0) {
         source.width = -source.width;
     }
 
     Rectangle dest = { position.x, position.y, texture.width * 0.6f, texture.height * 0.6f };
-    Vector2 origin = { 0.0f, 0.0f }; 
+    Vector2 origin = { 0.0f, 0.0f };
 
     DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
+
+    if (active) {
+        for (int i = 0; i < projectileCount; i++) {
+            if (projectiles[i].IsActive()) {
+                projectiles[i].Draw();
+            }
+        }
+    }
 }
 
-bool Stand::isActive() {
+
+bool Stand::isActive() const{
     return active;
 }
 
 void Stand::Unload() {
+    if (projectiles) {
+        delete[] projectiles;
+        projectiles = nullptr;
+    }
+
+    projectileCount = 0;
     UnloadTexture(texture);
 }
+
+Stand::~Stand() {
+     if (projectiles) {
+            delete[] projectiles;
+            projectiles = nullptr;
+     }
+}
+

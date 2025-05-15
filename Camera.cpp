@@ -5,21 +5,34 @@
 CameraControl::CameraControl(Vector2 startTarget, Vector2 offset, float zoom) 
     : camera{ startTarget, offset, 0.0f, zoom } {
   
-    camera.rotation = 0.0f;
     worldSize = { TILE_COLS * TILE_SIZE, (TILE_ROWS + 0.5) * TILE_SIZE };
+    camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
 }
 
 void CameraControl::Update(Vector2 targetPos) {
-    float cameraHalfWidth = (GetScreenWidth() / 2.0f) / camera.zoom;
-    float cameraHalfHeight = (GetScreenHeight() / 2.0f) / camera.zoom;
+    float screenWidth = GetScreenWidth();
+    float screenHeight = GetScreenHeight();
+    float zoom = camera.zoom;
+
+    float viewWidth = screenWidth / zoom;
+    float viewHeight = screenHeight / zoom;
+
+    float horizontalBias = 0.33f; // Giorno appears on the left third
+
+    camera.target.x = targetPos.x + viewWidth * (0.5f - horizontalBias); // keeping the player on the left
+    camera.target.y = targetPos.y;
+
+    
+    camera.target.x = fminf(fmaxf(camera.target.x, viewWidth / 2.0f), worldSize.x - viewWidth / 2.0f); //the camera sticks to a box
+    camera.target.y = fminf(fmaxf(camera.target.y, viewHeight / 2.0f), worldSize.y - viewHeight / 2.0f);
+
     if (IsKeyDown(KEY_W)) {
         camera.offset.y -= 10.0f; // move camera up
     }
     if (IsKeyDown(KEY_S)) {
         camera.offset.y += 10.0f; // move camera down
     }
-    camera.target.x = fminf(fmaxf(targetPos.x, cameraHalfWidth), worldSize.x - cameraHalfWidth);
-    camera.target.y = fminf(fmaxf(targetPos.y, cameraHalfHeight), worldSize.y - cameraHalfHeight);
+
 }
 
 void CameraControl::Begin() {

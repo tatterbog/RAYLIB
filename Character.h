@@ -2,12 +2,7 @@
 #define CHARACTER_H
 
 #include "raylib.h"
-
-#define TILE_SIZE 32
-#define WIDTH 800 
-#define HEIGHT 600 
-#define TILE_COLS 100
-#define TILE_ROWS (HEIGHT / TILE_SIZE)
+#include "Globals.h"
 
 
 class Character {

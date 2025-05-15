@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "Stand.h"
 #include "Level.h"
+#include "Enemy.h"
+#include "EnemyStand.h"
 
 #define totalLevels 3
 
@@ -30,6 +32,7 @@ private:
     Stand* GoldExp;
     CameraControl cam;
     Level* levels[totalLevels];
+    Enemy* enemies[totalLevels];
 
     Texture2D GiornoDir;
     Texture2D dirtDir;

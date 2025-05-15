@@ -3,12 +3,7 @@
 
 #include "Character.h"
 #include "raylib.h"
-
-#define TILE_SIZE 32
-#define WIDTH 800 
-#define HEIGHT 600 
-#define TILE_COLS 100
-#define TILE_ROWS (HEIGHT / TILE_SIZE)
+#include "Globals.h"
 
 class Player : public Character{
 private:
@@ -22,6 +17,8 @@ private:
     float facingRight = 1.0f;
     bool isTile(int el);
     int deaths = 0;
+    int health = 100;
+    int maxHealth = 100;
 
 public:
     
@@ -35,6 +32,9 @@ public:
     float getGravity();
     void setGravity(float f);
     Vector2 getPosition();
+    void TakeDamage(int amount);
+    int GetHealth() const;
+    void DrawHealthBar() const;
 };
 
 #endif

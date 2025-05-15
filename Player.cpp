@@ -32,6 +32,7 @@ void Player::Update(int level[][TILE_COLS], int currentLevel)
             velocityY = 0;
             OnGround = true;
         }
+
         else {
             OnGround = false;
         }
@@ -69,6 +70,28 @@ void Player::Draw()
     Rectangle dest = { position.x, position.y, texture.width * scale, texture.height * scale };
     DrawTexturePro(texture, source, dest, {0,0}, 0.0f, WHITE);
     DrawEllipse(position.x + (texture.width * scale) / 2 + 1, position.y + texture.height * scale, 15, 8, Fade(BLACK, 0.3f));
+    DrawHealthBar();
+}
+
+void Player::TakeDamage(int amount) {
+    health -= amount;
+    if (health < 0) health = 0;
+}
+
+int Player::GetHealth() const {
+    return health;
+}
+
+void Player::DrawHealthBar() const {
+    float barWidth = 50;
+    float barHeight = 6;
+    float x = position.x + (texture.width * scale / 2) - barWidth / 2;
+    float y = position.y - 10;
+
+    float healthRatio = (float)health / maxHealth;
+    DrawRectangle(x, y, barWidth, barHeight, DARKGRAY);
+    DrawRectangle(x, y, barWidth * healthRatio, barHeight, RED);
+    DrawRectangleLines(x, y, barWidth, barHeight, BLACK);
 }
 
 Vector2 Player::getPosition() {

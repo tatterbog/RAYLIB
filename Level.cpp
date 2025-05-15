@@ -23,7 +23,7 @@ int Level::Draw(Character* player, int currentLevel, int totalLevels) {
         }
     }
 
-    if (musicPlaying && !IsMusicStreamPlaying(music)) {
+    if (musicPlaying) {
         UpdateMusicStream(music);
     }
 

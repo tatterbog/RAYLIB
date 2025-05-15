@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 
+#define MAX_ENEMIES 5
+
 int** LoadLevel(const std::string& filename);
 
 Game::Game()
@@ -44,10 +46,24 @@ void Game::Init() {
 
     MainSong = LoadMusicStream("songs/MainSong.wav");
     summon = LoadSound("songs/GoldenExpCall.wav");
+    summon = LoadSound("songs/GoldenExpCall.wav");
 
     levels[0] = new Level(level0, dirtDir, grassDir, endDir, Background, MainSong);
     levels[1] = new Level(level1, dirtDir, grassDir, endDir, Background, MainSong);
     levels[2] = new Level(level2, dirtDir, grassDir, endDir, Background, MainSong);
+
+    Sound enemySummon1 = LoadSound("songs/Metallica.wav");
+    Sound enemySummon2 = LoadSound("songs/enemy2Summon.wav");
+    Sound enemySummon3 = LoadSound("songs/enemy3Summon.wav");
+
+    enemies[0] = new Enemy({(float) (GetScreenWidth() / 2 + 1600), (float)(GetScreenHeight() / 2 + 20) }, "pngs/rissoto.png", "pngs/rissotoStand.png",
+        enemySummon1, "pngs/metallicaShoot.png");
+
+    enemies[1] = new Enemy({ 800, 420 }, "pngs/enemy2.png", "pngs/enemyStand2.png",
+        enemySummon2, "pngs/enemyProjectile2.png");
+
+    enemies[2] = new Enemy({ 600, 420 }, "pngs/enemy3.png", "pngs/enemyStand3.png", 
+        enemySummon3, "pngs/enemyProjectile3.png");
 }
 
 void Game::Run() {
@@ -73,6 +89,27 @@ void Game::Update() {
 
     Giorno->Update(levels[currentLevel]->getTiles(), currentLevel);
 
+    if (enemies[currentLevel]) {
+        enemies[currentLevel]->Update(levels[currentLevel]->getTiles(), currentLevel,
+            Giorno->getPosition(), cam.GetCamera());
+
+        for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+            Projectile& p = enemies[currentLevel]->stand.projectiles[i];
+            if (p.IsActive()) {
+                Vector2 projPos = p.GetPosition();
+                Vector2 playerPos = Giorno->getPosition();
+
+                float dx = projPos.x - playerPos.x;
+                float dy = projPos.y - playerPos.y;
+                float distSq = dx * dx + dy * dy;
+
+                if (distSq < 30 * 30) {
+                    Giorno->TakeDamage(10);
+                    p.Deactivate();         
+                }
+            }
+        }
+    }
 }
 
 
@@ -91,6 +128,9 @@ void Game::Draw() {
         GoldExp->Draw();
     }
 
+    if (enemies[currentLevel]) {
+        enemies[currentLevel]->Draw();
+    }
     cam.End();
 
     
@@ -121,6 +161,13 @@ void Game::Unload() {
 
     for (int i = 0; i < totalLevels; i++) {
         delete levels[i];
+    }
+
+    for (int i = 0; i < totalLevels; i++) {
+        if (enemies[i]) {
+            enemies[i]->Unload();
+            delete enemies[i];
+        }
     }
 
     UnloadSound(summon);

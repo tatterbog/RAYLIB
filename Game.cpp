@@ -37,33 +37,36 @@ void Game::Init() {
     grassDir = LoadTexture("pngs/grass.png");
     endDir = LoadTexture("pngs/end.png");
     Background = LoadTexture("pngs/background.png");
+    WinningDir = LoadTexture("pngs/win.png");
+    LosingDir = LoadTexture("pngs/lose.png");
 
     Vector2 spawnPos = { GetScreenWidth() / 2, GetScreenHeight() / 2 };
-    Giorno = new Player("pngs/Giorno.png", spawnPos, 0.11f);
-    GoldExp = new Stand("pngs/GoldenExperience.png");
+    Giorno = new Player("pngs/Giorno.png", spawnPos, PLAYER_SCALE);
+    GoldExp = new Stand("pngs/GoldenExperience.png", "pngs/GiornoShoot.png");
 
     cam = CameraControl(Giorno->getPosition(), { WIDTH / 2.0f, HEIGHT / 2.0f }, 1.0f);
 
     MainSong = LoadMusicStream("songs/MainSong.wav");
-    summon = LoadSound("songs/GoldenExpCall.wav");
     summon = LoadSound("songs/GoldenExpCall.wav");
 
     levels[0] = new Level(level0, dirtDir, grassDir, endDir, Background, MainSong);
     levels[1] = new Level(level1, dirtDir, grassDir, endDir, Background, MainSong);
     levels[2] = new Level(level2, dirtDir, grassDir, endDir, Background, MainSong);
 
-    Sound enemySummon1 = LoadSound("songs/Metallica.wav");
-    Sound enemySummon2 = LoadSound("songs/enemy2Summon.wav");
-    Sound enemySummon3 = LoadSound("songs/enemy3Summon.wav");
+    enemySummon1 = LoadSound("songs/Metallica.wav");
+    enemySummon2 = LoadSound("songs/GreenDayCall.wav");
+    enemySummon3 = LoadSound("songs/enemy3Summon.wav");
 
-    enemies[0] = new Enemy({(float) (GetScreenWidth() / 2 + 1600), (float)(GetScreenHeight() / 2 + 20) }, "pngs/rissoto.png", "pngs/rissotoStand.png",
-        enemySummon1, "pngs/metallicaShoot.png");
+    enemies[0] = new Enemy({(float)(GetScreenWidth() / 2 + 1600), (float)(GetScreenHeight() / 2 + FONT) }, "pngs/Polpo.png", "pngs/PolpoStand.png",
+        enemySummon3, "pngs/PolpoShoot.png", 0);
 
-    enemies[1] = new Enemy({ 800, 420 }, "pngs/enemy2.png", "pngs/enemyStand2.png",
-        enemySummon2, "pngs/enemyProjectile2.png");
+    enemies[1] = new Enemy({(float)(GetScreenWidth() / 2 + 1600), (float)(GetScreenHeight() / 2 + FONT) }, "pngs/rissoto.png", "pngs/rissotoStand.png",
+        enemySummon1, "pngs/metallicaShoot.png", 1);
 
-    enemies[2] = new Enemy({ 600, 420 }, "pngs/enemy3.png", "pngs/enemyStand3.png", 
-        enemySummon3, "pngs/enemyProjectile3.png");
+    enemies[2] = new Enemy({ (float)(GetScreenWidth() / 2 + 1600), (float)(GetScreenHeight() / 2 + FONT) }, "pngs/Ciocolatta.png", "pngs/CiocolattaStand.png",
+        enemySummon2, "pngs/ciocolattaShoot.png", 2);
+
+ 
 }
 
 void Game::Run() {
@@ -89,25 +92,51 @@ void Game::Update() {
 
     Giorno->Update(levels[currentLevel]->getTiles(), currentLevel);
 
+    if (GoldExp->isActive() && IsKeyPressed(KEY_H) && Giorno->GetHealth() < MAX_HEALTH) {
+        Giorno->setHealth(HIT);
+    }
+
     if (enemies[currentLevel]) {
         enemies[currentLevel]->Update(levels[currentLevel]->getTiles(), currentLevel,
-            Giorno->getPosition(), cam.GetCamera());
+            Giorno, cam.GetCamera());
+    }
+    if (Giorno->isDead()) {
+        float scale = 0.5f; 
 
-        for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
-            Projectile& p = enemies[currentLevel]->stand.projectiles[i];
-            if (p.IsActive()) {
-                Vector2 projPos = p.GetPosition();
-                Vector2 playerPos = Giorno->getPosition();
+        float destWidth = LosingDir.width * scale;
+        float destHeight = LosingDir.height * scale;
 
-                float dx = projPos.x - playerPos.x;
-                float dy = projPos.y - playerPos.y;
-                float distSq = dx * dx + dy * dy;
+        float posX = (GetScreenWidth() - destWidth) / 2;
+        float posY = (GetScreenHeight() - destHeight) / 2;
 
-                if (distSq < 30 * 30) {
-                    Giorno->TakeDamage(10);
-                    p.Deactivate();         
-                }
+        DrawTexturePro(LosingDir,
+            { 0, 0, (float)LosingDir.width, (float)LosingDir.height }, 
+            { posX, posY, destWidth, destHeight }, { 0, 0 }, 0.0f, WHITE );
+
+        EndDrawing();
+        WaitTime(2.0); 
+        CloseWindow();
+        exit(0);
+    }
+
+    for (auto& enemy : enemies) {
+        if (!enemy) { continue; }
+        for (int i = 0; i < GoldExp->projectileCount; i++) {
+            Projectile& p = GoldExp->projectiles[i];
+            if (!p.IsActive()) { continue; }
+
+            if (p.CheckCollision(enemy->getPosition(), enemy->getWidth(),
+                enemy->getHeight()) && enemy->getLevel() == currentLevel) {
+                enemy->TakeDamage(HIT);
+                p.Deactivate();
             }
+        }
+    }
+    for (int i = 0; i < totalLevels; i++) {
+        if (enemies[i] && enemies[i]->getPosition().y <= 0 && enemies[i]->toBeDeleted) {
+            enemies[i]->Unload();
+            delete enemies[i];
+            enemies[i] = nullptr;
         }
     }
 }
@@ -119,7 +148,7 @@ void Game::Draw() {
 
     cam.Begin();
 
-    currentLevel = levels[currentLevel]->Draw(Giorno, currentLevel, totalLevels);
+    currentLevel = levels[currentLevel]->Draw(Giorno, currentLevel, totalLevels, WinningDir);
 
     levels[currentLevel]->DrawTutorial(Giorno, currentLevel);
     Giorno->Draw();
@@ -134,8 +163,13 @@ void Game::Draw() {
     cam.End();
 
     
-
-    DrawText("Yee Yee Ahh game", 10, 10, 20, DARKGRAY);
+    
+    if (Giorno->getGravity() >= 0) {
+        DrawText("Gravity toggled: off", 0, GetScreenHeight() / 2, FONT, PURPLE);
+    }  else {
+        DrawText("Gravity toggled: on", 0, GetScreenHeight() / 2, FONT, PURPLE);
+    }
+    DrawText("Yee Yee Ahh game", 10, 10, FONT, DARKGRAY);
 
     EndDrawing();
 }
@@ -148,6 +182,8 @@ void Game::Unload() {
     UnloadTexture(dirtDir);
     UnloadTexture(grassDir);
     UnloadTexture(GiornoDir);
+    UnloadTexture(LosingDir);
+    UnloadTexture(WinningDir);
 
     if (Giorno) {
         Giorno->Unload();
@@ -170,6 +206,10 @@ void Game::Unload() {
         }
     }
 
+
+    UnloadSound(enemySummon1);
+    UnloadSound(enemySummon2);
+    UnloadSound(enemySummon3);
     UnloadSound(summon);
     UnloadMusicStream(MainSong);
 

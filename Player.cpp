@@ -13,11 +13,11 @@ void Player::Update(int level[][TILE_COLS], int currentLevel)
 {
     if ((IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && (position.x < (TILE_COLS * TILE_SIZE))) {
         facingRight = 1.0f;
-        position.x += 5.0f;
+        position.x += playerOffset;
     }
     if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) && (position.x > 0)) {
         facingRight = -1.0f;
-        position.x -= 5.0f;
+        position.x -= playerOffset;
     }
 
     if (!OnGround) { velocityY += gravity; }
@@ -43,19 +43,22 @@ void Player::Update(int level[][TILE_COLS], int currentLevel)
     }
 
     if (IsKeyPressed(KEY_SPACE) && OnGround) {
-        velocityY = -6.5f;
+        velocityY = -jumpForce;
         OnGround = false;
     }
+
     
-    if ((position.y > HEIGHT + 2) || (position.y < -30) ) {
+
+    if ((position.y > HEIGHT ) || (position.y <= 0) || (health <= 0)) {
         if (currentLevel == 0) {
-            position.x = 0;
-            position.y = 0;
+            position.x = GetScreenHeight() / 3;
+            position.y = GetScreenWidth() / 3;
             deaths++;
+            health = maxHealth;
+            gravity = GRAVITY;
         }
         else {
-            CloseWindow();
-            exit(0);
+            Dead = true;
         }
     }
 
@@ -75,11 +78,17 @@ void Player::Draw()
 
 void Player::TakeDamage(int amount) {
     health -= amount;
-    if (health < 0) health = 0;
+    if (health < 0) {
+        health = 0;
+    }
 }
 
 int Player::GetHealth() const {
     return health;
+}
+
+void Player::setHealth(int amount) {
+    health += amount;
 }
 
 void Player::DrawHealthBar() const {
@@ -96,6 +105,10 @@ void Player::DrawHealthBar() const {
 
 Vector2 Player::getPosition() {
     return position;
+}
+
+bool Player::isDead() {
+    return Dead;
 }
 
 void Player::setPosition(const Vector2& vec) {

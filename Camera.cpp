@@ -27,10 +27,10 @@ void CameraControl::Update(Vector2 targetPos) {
     camera.target.y = fminf(fmaxf(camera.target.y, viewHeight / 2.0f), worldSize.y - viewHeight / 2.0f);
 
     if (IsKeyDown(KEY_W)) {
-        camera.offset.y -= 10.0f; // move camera up
+        camera.offset.y -= cameraSpeed; // move camera up
     }
     if (IsKeyDown(KEY_S)) {
-        camera.offset.y += 10.0f; // move camera down
+        camera.offset.y += cameraSpeed; // move camera down
     }
 
 }

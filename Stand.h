@@ -8,23 +8,26 @@
 
 class Stand : public StandBase {
 public:
-    Stand(const char* texturePath);
+    Projectile* projectiles = nullptr;
+    int projectileCount = 0;
+    Stand(const char* texturePath, const char* projectileTexturePath);
     void Update(Vector2 playerPos, const Sound& summon, const Camera2D& camera);
+    void ClearProjectiles();
     bool isActive() const;
     void Draw();
     void Unload();
     ~Stand();
-
+    
 private:
     Texture2D texture;
+    Texture2D projectileTexture;
     Vector2 position;
     bool active = false;
     bool punching = false;
     bool firstUpdate = true;
     float facingRight = 1.0f;
 
-    Projectile* projectiles = nullptr; 
-    int projectileCount = 0;
+    
     void Shoot(Vector2 direction);
 };
 

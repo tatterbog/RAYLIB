@@ -11,7 +11,7 @@ Level::Level(int **layout, Texture2D dirt, Texture2D grass, Texture2D end, Textu
 
 }
 
-int Level::Draw(Character* player, int currentLevel, int totalLevels) {
+int Level::Draw(Character* player, int currentLevel, int totalLevels, Texture2D winTexture) {
     if (IsKeyPressed(KEY_M)) {
         musicPlaying = !musicPlaying;
 
@@ -45,10 +45,34 @@ int Level::Draw(Character* player, int currentLevel, int totalLevels) {
             case 3:
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, DARKPURPLE);
                 if (CheckCollisionRecs(playerRect, tileRect)) {
-                    StopMusic(); 
+                    StopMusic();
+                    if (currentLevel == totalLevels - 1) {
+                        while (!WindowShouldClose() && !IsKeyPressed(KEY_ENTER)) {
+                            BeginDrawing();
+                            ClearBackground(BLACK);
+
+                            float scale = 0.5f;
+                            float width = winTexture.width * scale;
+                            float height = winTexture.height * scale;
+                            float posX = (GetScreenWidth() - width) / 2;
+                            float posY = (GetScreenHeight() - height) / 2;
+
+                            DrawTexturePro(winTexture,
+                                { 0, 0, (float)winTexture.width, (float)winTexture.height },
+                                { posX, posY, width, height },
+                                { 0, 0 }, 0.0f, WHITE);
+
+                            DrawText("YOU WIN! Press ENTER to exit.", posX, posY + height + 20, 20, WHITE);
+                            EndDrawing();
+                        }
+
+                        CloseWindow();
+                        exit(0);
+                    }
+
                     currentLevel = (currentLevel + 1) % totalLevels;
-                    player->setPosition({ (float)GetScreenWidth()/2 , (float)GetScreenHeight() / 2 });
-                    player->setGravity(0.4f);
+                    player->setPosition({ (float)GetScreenWidth() / 2 , (float)GetScreenHeight() / 2 });
+                    player->setGravity(GRAVITY);
                 }
                 break;
             case 2:
@@ -72,24 +96,24 @@ int (*Level::getTiles())[TILE_COLS] {
 
 void Level::DrawTutorial(Character* player, int levelIndex) {
     if (levelIndex != 0) { return; } // Only show in level 0
-    DrawText("Welcome to the tutorial!", 10, 200, 20, DARKGRAY);
+    DrawText("Welcome to the tutorial!", 10, 200, FONT, DARKGRAY);
 
     Vector2 movePos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2};  // Centered for move tutorial
     Vector2 jumpPos = { GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 + 40 };        // Below for jump tutorial
-    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + 20 };  // Below jump tutorial
-    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + 20 };      // At the bottom for proceed tutorial
+    Vector2 summonPos = { GetScreenWidth() / 2 + 450, GetScreenHeight() / 2 + FONT };  // Below jump tutorial
+    Vector2 proceedPos = { GetScreenWidth() / 2 + 1600, GetScreenHeight() / 2 + FONT };      // At the bottom for proceed tutorial
 
     if (player->getDeathCount() > 0 && levelIndex == 0) {
-        DrawText("You can only respawn in the tutorial", GetScreenWidth() / 4 + 100, GetScreenHeight() / 4, 20, RED);
+        DrawText("You can only respawn in the tutorial", GetScreenWidth() / 4 + 100, GetScreenHeight() / 4, FONT, RED);
     }
-    DrawText("Press [A]/[D] to move (the arrow keys work too)", movePos.x, movePos.y, 20, BLACK);
-    DrawText("Press [SPACE] to jump", jumpPos.x, jumpPos.y, 20, BLACK);
-    DrawText("Press [F] to summon Stand", summonPos.x, summonPos.y, 20, BLACK);
-    DrawText("(he's a helpful fella can do a lot of things, at least in the future)", summonPos.x, summonPos.y + 20, 20, BLACK); 
+    DrawText("Press [A]/[D] to move (the arrow keys work too)", movePos.x, movePos.y, FONT, BLACK);
+    DrawText("Press [SPACE] to jump", jumpPos.x, jumpPos.y, FONT, BLACK);
+    DrawText("Press [F] to summon Stand, and press [C] to shoot ", summonPos.x, summonPos.y, FONT, BLACK);
+    DrawText("(He's a helpful fella can do a lot of things, Press [H] to heal)", summonPos.x, summonPos.y + FONT, FONT, BLACK); 
     DrawText("That's the end of the level, oh noooo how will you reach there?",
-        proceedPos.x, proceedPos.y, 20, DARKGREEN);
+        proceedPos.x, proceedPos.y, FONT, DARKGREEN);
     DrawText("Press [G] to flip the gravity and jump",
-        proceedPos.x, proceedPos.y + 20, 20 , DARKGREEN);
+        proceedPos.x, proceedPos.y + FONT, FONT , DARKGREEN);
 }
 
 void Level::StopMusic() {

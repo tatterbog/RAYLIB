@@ -3,16 +3,21 @@
 #include <cmath>
 #include "EnemyStand.h"
 
+
 Enemy::Enemy(Vector2 startPos, const char* texturePath, const char* standTexturePath,
-    Sound summonSound, const char* projectileTexturePath)
-    : position(startPos), startPos(startPos), stand(standTexturePath), summonSound(summonSound) {
+    Sound summonSound, const char* projectileTexturePath, int levelID)
+    : position(startPos), startPos(startPos), stand(standTexturePath, projectileTexturePath), summonSound(summonSound), levelID(levelID) {
     texture = LoadTexture(texturePath);
     projectileTexture = LoadTexture(projectileTexturePath);
 }
 
+Enemy::~Enemy() {
+    Unload();
+}
+
 void Enemy::Update(int level[][TILE_COLS], int currentLevel) {}
 
-void Enemy::Update(int level[][TILE_COLS], int currentLevel, Vector2 playerPos, const Camera2D& camera) {
+void Enemy::Update(int level[][TILE_COLS], int currentLevel, Character* player, const Camera2D& camera) {
     // roaming logic
     if (movingRight) {
         position.x += speed;
@@ -49,17 +54,17 @@ void Enemy::Update(int level[][TILE_COLS], int currentLevel, Vector2 playerPos, 
     }
 
     // Face the player
-    facingRight = playerPos.x > position.x;
+    facingRight = player->getPosition().x > position.x;
 
-    stand.Update(position, playerPos, summonSound, camera);
+    stand.Update(position, player, summonSound, camera, facingRight);
 
-    float dx = position.x - playerPos.x;
-    float dy = position.y - playerPos.y;
+    float dx = position.x - player->getPosition().x;
+    float dy = position.y - player->getPosition().y;
     float distSq = dx * dx + dy * dy;
 
     if (distSq < activationDistance * activationDistance) {
         if (shootCooldown <= 0.0f) {
-            Vector2 direction = { playerPos.x - position.x, playerPos.y - position.y };
+            Vector2 direction = { player->getPosition().x - position.x, player->getPosition().y - position.y };
             stand.Shoot(direction);
             shootCooldown = shootRate;
         }
@@ -69,6 +74,12 @@ void Enemy::Update(int level[][TILE_COLS], int currentLevel, Vector2 playerPos, 
     if (shootCooldown > 0.0f) {
         shootCooldown -= GetFrameTime();
     }
+
+    if (health <= 0) {
+        gravity *= -1.0f;
+        OnGround = false;
+    }
+
 }
 
 int Enemy::getDeathCount() {
@@ -86,6 +97,10 @@ void Enemy::setPosition(const Vector2& vec) {
     position.y = vec.y;
 }
 
+int Enemy::getLevel() const {
+    return levelID;
+}
+
 void Enemy::Draw() {
     Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
     if (!facingRight) {
@@ -94,14 +109,50 @@ void Enemy::Draw() {
 
     Rectangle dest = { position.x, position.y, texture.width * scale, texture.height * scale };
     DrawTexturePro(texture, source, dest, { 0, 0 }, 0.0f, WHITE);
-    DrawEllipse(position.x + (texture.width * scale) / 2 + 1, position.y + texture.height * scale, 15, 8, Fade(BLACK, 0.3f));
+    DrawEllipse(position.x + (texture.width * scale) / 2 , position.y + texture.height * scale, 15, 8, Fade(BLACK, 0.3f));
     
     stand.Draw();
+    DrawHealthBar();
 }
+
+void Enemy::DrawHealthBar() const {
+    float barWidth = 50;
+    float barHeight = 6;
+    float x = position.x + (texture.width * scale / 2) - barWidth / 2;
+    float y = position.y - 10;
+
+    float healthRatio = (float)health / (float)maxHealth;
+    DrawRectangle(x, y, barWidth, barHeight, DARKGRAY);
+    DrawRectangle(x, y, barWidth * healthRatio, barHeight, RED);
+    DrawRectangleLines(x, y, barWidth, barHeight, BLACK);
+}
+
+void Enemy::TakeDamage(int amount) {
+    health -= amount;
+    if (health <= 0) {
+        health = 0;
+        toBeDeleted = true; 
+        OnGround = false;
+        Active = false;
+    }
+}
+
+int Enemy::GetHealth() const {
+    return health;
+}
+
+void Enemy::setHealth(int amount) {
+    health += amount;
+}
+
+void Enemy::ClearProjectiles() {
+    stand.ClearProjectiles();
+}
+
+
 
 void Enemy::Unload() {
     UnloadTexture(texture);
     stand.Unload();
-    UnloadSound(summonSound);
     UnloadTexture(projectileTexture);
 }

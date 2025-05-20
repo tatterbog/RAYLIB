@@ -3,9 +3,10 @@
 #include <iostream>
 #include <cmath>
 
-Stand::Stand(const char* texturePath)
-    : position({0,0}), projectiles(new Projectile[MAX_PROJECTILES]), projectileCount(0) {
-    texture = LoadTexture(texturePath);
+Stand::Stand(const char* standTexturePath, const char* projectileTexturePath)
+    : projectiles(new Projectile[MAX_PROJECTILES]), projectileCount(0) {
+    texture = LoadTexture(standTexturePath);
+    projectileTexture = LoadTexture(projectileTexturePath); 
 }
 
 void Stand::Update(Vector2 playerPos, const Sound& summon, const Camera2D& camera) {
@@ -80,26 +81,28 @@ void Stand::Update(Vector2 playerPos, const Sound& summon, const Camera2D& camer
         }
         projectileCount = activeCount;
     }
-
 }
 
 void Stand::Shoot(Vector2 direction) {
     float len = sqrtf(direction.x * direction.x + direction.y * direction.y);
-    if (len == 0) { return; }
+    if (len == 0 || projectileCount > MAX_ENEMY_PROJECTILES) { return; }
 
-    Projectile* prr = new Projectile[projectileCount + 1];
+    Projectile* prr = new Projectile[(size_t)projectileCount + 1];
     for (int i = 0; i < projectileCount; i++) {
         prr[i] = projectiles[i];
     }
 
     Vector2 dirNorm = { direction.x / len, direction.y / len };
-    prr[projectileCount].Spawn(position, dirNorm);
+    prr[projectileCount].Spawn(position, dirNorm, projectileTexture);
 
     delete[] projectiles;
     projectiles = prr;
     projectileCount++;
 }
 
+void Stand::ClearProjectiles() {
+    projectileCount = 0;
+}
 
 void Stand::Draw() {
     Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
@@ -133,10 +136,12 @@ void Stand::Unload() {
     }
 
     projectileCount = 0;
+    UnloadTexture(projectileTexture);
     UnloadTexture(texture);
 }
 
 Stand::~Stand() {
+     Unload();
      if (projectiles) {
             delete[] projectiles;
             projectiles = nullptr;
